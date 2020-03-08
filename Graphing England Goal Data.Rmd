@@ -1,0 +1,113 @@
+---
+title: "Graphing Shot Data"
+author: "Dillon Jacob"
+date: "3/3/2020"
+output: pdf_document
+---
+
+```{r}
+library(ggplot2)
+library(ggsoccer)
+library(readxl)
+library(tidyverse)
+shot_data <- read_excel("/Users/dillonjacob/Desktop/England_R_Data.xlsx")
+ggplot(shot_data, aes(x = shot_data$shooter_x, y = shot_data$shooter_y)) + annotate_pitch(colour = "dimgray", fill = "white", limits = TRUE, dimensions = pitch_wyscout) + geom_point()
+```
+
+```{r}
+own_goals <- filter(shot_data, tag1 == 102)
+
+ggplot(own_goals, aes(x = shooter_x, y = shooter_y)) + annotate_pitch(dimensions = pitch_wyscout) + geom_point()
+```
+
+```{r}
+ggplot(shot_data, aes(x = shot_data$goalie_x, y = shot_data$goalie_y)) + annotate_pitch(dimensions = pitch_wyscout) + geom_point()
+#I am not entirely sure that this is the goalie
+```
+
+
+```{r pressure, echo=FALSE}
+?pitch_wyscout
+length(unique(shot_data$` matchId`))
+#there were goals in 347 different matches
+ggplot(shot_data, aes(x = shot_data$shooter_x, y = shot_data$shooter_y)) + annotate_pitch(dimensions = pitch_wyscout) + geom_point(color = shot_data$` matchId`)
+```
+
+Reading in match Id's and Names
+```{r}
+goal_nameID <- read.csv("/Users/dillonjacob/Desktop/goals_and_ids.csv")
+nogoal_nameID <- read.csv("/Users/dillonjacob/Desktop/nogoals_and_ids.csv")
+matchups_scores_ids <- read_excel("/Users/dillonjacob/Desktop/matchups_scores_IDs.xlsx")
+
+#reading in matchups, scores and IDs
+matchups_scores_id2 <- read_excel("/Users/dillonjacob/Desktop/matchup_score_id2.xlsx")
+
+#filtering manchester city's games
+man_city <- matchups_scores_id2 %>%
+filter(str_detect(matchup, "Manchester City"))
+
+length(unique(man_city$matchId))
+
+#filtering manchester united id's
+man_u <- matchups_scores_id2 %>%
+filter(str_detect(matchup, "Manchester United"))
+
+man_u_id <- as.vector(man_u$matchId)
+man_city_id <- as.vector(man_city$matchId)
+```
+
+
+MANCHESTER CITY GOALS
+```{r}
+#this code includes goals scored against man city so its really goals in man city games
+man_city_goals2 <- shot_data %>%
+  filter(shot_data$` matchId` %in% man_city_id)
+
+unique(man_city_goals2)
+#manchester city team ID is 1625
+
+man_city_goals_final <- man_city_goals2 %>%
+  filter(man_city_goals2$` teamId` == 1625)
+#this event set is two goals short
+```
+
+```{r}
+ggplot(man_city_goals_final, aes(x = man_city_goals_final$shooter_x, y = man_city_goals_final$shooter_y)) + annotate_pitch(dimensions = pitch_wyscout) + geom_point(color = man_city_goals_final$` playerId`)
+```
+
+MANCHESTER UNITED GOALS
+```{r}
+#this code includes goals scored against man united
+man_u_goals <- shot_data %>%
+  filter(shot_data$` matchId` %in% man_u_id)
+
+unique(man_u_goals)
+#manchester city team ID is 1611
+
+man_u_goals_final <- man_u_goals %>%
+  filter(man_u_goals$` teamId` == 1611)
+#this event set is one goal short
+```
+
+```{r}
+ggplot(man_u_goals_final, aes(x = man_u_goals_final$shooter_x, y = man_u_goals_final$shooter_y)) + annotate_pitch(dimensions = pitch_wyscout) + geom_point(color = man_u_goals_final$` playerId`)
+
+man_u_goalscorer <- as.vector(unique(man_u_goals_final$` playerId`))
+print(man_u_goalscorer)
+```
+
+
+MANCHESTER UNITED GOALS AGAINST MANCHESTER CITY
+```{r}
+man_u_goals_against_man_city <- man_city_goals2 %>%
+  filter(man_city_goals2$` teamId` == 1611)
+```
+
+IMPORTING PLAYER DATA
+```{r}
+PlayerNameTeam <- read_excel("/Users/dillonjacob/Desktop/PlayerNameTeam.xlsx")
+
+man_u_scorer_names <- PlayerNameTeam %>%
+  filter(PlayerNameTeam$wyID %in% man_u_goalscorer)
+```
+
